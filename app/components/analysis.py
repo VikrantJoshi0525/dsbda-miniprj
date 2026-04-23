@@ -30,16 +30,16 @@ def render_analysis(df: pd.DataFrame):
     # ── Filters Row ──────────────────────────────────────────
     f1, f2, f3 = st.columns(3, gap="medium")
     with f1:
-        keyword = st.text_input("🔎 Keyword Search", placeholder="e.g. AI, climate…")
+        keyword = st.text_input("Keyword Search", placeholder="e.g. AI, climate…")
     with f2:
         topic_filter = st.multiselect(
-            "📌 Topic",
+            "Topic",
             options=sorted(df["topic"].unique()),
             default=[],
         )
     with f3:
         sort_by = st.selectbox(
-            "📊 Sort By",
+            "Sort By",
             options=["Most Recent", "Highest Score", "Lowest Score", "Most Liked", "Most Shared"],
         )
 
@@ -92,7 +92,7 @@ def render_analysis(df: pd.DataFrame):
     )
 
     # ── Tabs ─────────────────────────────────────────────────
-    tab_cards, tab_table, tab_topics = st.tabs(["📇 Cards", "📋 Table", "📌 Topic Breakdown"])
+    tab_cards, tab_table, tab_topics, tab_graph = st.tabs(["Cards", "Table", "Topic Breakdown", "Knowledge Graph"])
 
     # ── Cards Tab ────────────────────────────────────────────
     with tab_cards:
@@ -130,7 +130,7 @@ def render_analysis(df: pd.DataFrame):
                             {row['text']}
                         </p>
                         <div style="margin-top:0.5rem; color:{COLORS['text']}55; font-size:0.75rem;">
-                            ❤️ {row.get('likes', 0):,} · 🔄 {row.get('shares', 0):,} · 👥 {row.get('user_followers', 0):,} followers
+                            {row.get('likes', 0):,} · {row.get('shares', 0):,} · {row.get('user_followers', 0):,} followers
                         </div>
                     </div>
                     """,
@@ -188,4 +188,22 @@ def render_analysis(df: pd.DataFrame):
                     "total_likes": "Total Likes",
                 }),
                 use_container_width=True,
+            )
+            
+    # ── Knowledge Graph Tab ──────────────────────────────────
+    with tab_graph:
+        if filtered.empty:
+            st.info("No data available for knowledge graph.")
+        else:
+            from components.visualizations import semantic_network_graph
+            with st.spinner("Generating Semantic Network..."):
+                fig_graph = semantic_network_graph(filtered, text_col="text", top_n=40)
+                st.plotly_chart(fig_graph, use_container_width=True)
+                
+            st.markdown(
+                f"""
+                <div style="background:{COLORS['primary']}10; border:1px solid {COLORS['primary']}25; padding:1rem; border-radius:12px; margin-top:1rem; font-size:0.85rem; color:{COLORS['text']}aa;">
+                    <b>How to read this graph:</b> Nodes represent frequently used words. Edges (lines) connect words that frequently appear together in the same post. Larger nodes indicate higher frequency. This helps visualize the underlying narrative structure of the dataset.
+                </div>
+                """, unsafe_allow_html=True
             )

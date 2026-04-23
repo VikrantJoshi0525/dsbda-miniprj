@@ -93,16 +93,16 @@ def render_dashboard(df: pd.DataFrame):
     topics_count = df["topic"].nunique() if "topic" in df.columns else 0
 
     if platforms_count > 1:
-        fifth_card = ("📊", "Avg Score", f"{avg_score:+.3f}", f"{platforms_count} platforms", COLORS["secondary"])
+        fifth_card = ("", "Avg Score", f"{avg_score:+.3f}", f"{platforms_count} platforms", COLORS["secondary"])
     else:
-        fifth_card = ("📌", "Topics", str(topics_count), f"Avg: {avg_score:+.3f}", COLORS["secondary"])
+        fifth_card = ("", "Topics", str(topics_count), f"Avg: {avg_score:+.3f}", COLORS["secondary"])
 
     cols = st.columns(5, gap="medium")
     cards = [
-        ("📝", "Total Posts",   format_number(total),     "",                                       COLORS["primary"]),
-        ("😊", "Positive",      format_number(pos_count), f"↑ {pos_count*100//max(total,1)}%",      COLORS["positive"]),
-        ("😠", "Negative",      format_number(neg_count), f"↓ {neg_count*100//max(total,1)}%",      COLORS["negative"]),
-        ("😐", "Neutral",       format_number(neu_count), f"  {neu_count*100//max(total,1)}%",      COLORS["neutral"]),
+        ("", "Total Posts",   format_number(total),     "",                                       COLORS["primary"]),
+        ("", "Positive",      format_number(pos_count), f"↑ {pos_count*100//max(total,1)}%",      COLORS["positive"]),
+        ("", "Negative",      format_number(neg_count), f"↓ {neg_count*100//max(total,1)}%",      COLORS["negative"]),
+        ("", "Neutral",       format_number(neu_count), f"  {neu_count*100//max(total,1)}%",      COLORS["neutral"]),
         fifth_card,
     ]
     for col, (icon, label, value, delta, color) in zip(cols, cards):
@@ -114,10 +114,10 @@ def render_dashboard(df: pd.DataFrame):
     # ── Tabbed Dashboard ─────────────────────────────────────
     # ══════════════════════════════════════════════════════════
     tab_overview, tab_keywords, tab_engage, tab_data = st.tabs([
-        "📊 Overview & Trends",
+        "Overview & Trends",
         "🔤 Keywords & WordCloud",
-        "📈 Engagement & Topics",
-        "📋 Data Export",
+        "Engagement & Topics",
+        "Data Export",
     ])
 
     # ── TAB 1: Overview & Trends ─────────────────────────────
@@ -224,7 +224,7 @@ def render_dashboard(df: pd.DataFrame):
         st.markdown(
             f"""
             <div style="margin-bottom:1rem;">
-                <h3 style="margin:0; color:{COLORS['text']};">📋 Data Preview & Export</h3>
+                <h3 style="margin:0; color:{COLORS['text']};">Data Preview & Export</h3>
                 <p style="color:{COLORS['text']}77; font-size:0.85rem; margin:0.2rem 0 0;">
                     Browse the processed dataset and download as CSV
                 </p>

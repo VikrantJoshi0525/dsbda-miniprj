@@ -1,5 +1,5 @@
 """
-🔮 Predict page — custom tweet / text sentiment prediction.
+Predict page — custom tweet / text sentiment prediction.
 
 Scores user-entered text using VADER, TextBlob, and (if trained) the Spark MLlib model.
 Shows animated result cards and a sentiment gauge.
@@ -126,10 +126,10 @@ def _result_card(label: str, score: float, engine: str, emoji: str) -> str:
 def _classify(score: float) -> tuple[str, str]:
     """Return (label, emoji) from score."""
     if score > 0.05:
-        return "Positive", "😊"
+        return "Positive", ""
     elif score < -0.05:
-        return "Negative", "😠"
-    return "Neutral", "😐"
+        return "Negative", ""
+    return "Neutral", ""
 
 
 def render_predict_page():
@@ -170,27 +170,27 @@ def render_predict_page():
     user_text = st.text_area(
         "Tweet / Text",
         height=120,
-        placeholder="e.g. I absolutely love this new product! It's amazing and works perfectly 🚀",
+        placeholder="e.g. I absolutely love this new product! It's amazing and works perfectly ",
         label_visibility="collapsed",
     )
 
     # Example tweets
     st.markdown(
         f"<p style='color:{COLORS['text']}66; font-size:0.78rem; margin:0.3rem 0 0.8rem;'>"
-        f"💡 Try these examples:</p>",
+        f"Try these examples:</p>",
         unsafe_allow_html=True,
     )
     ex1, ex2, ex3 = st.columns(3, gap="small")
     with ex1:
-        if st.button("😊 Positive example", use_container_width=True, key="ex_pos"):
+        if st.button("Positive example", use_container_width=True, key="ex_pos"):
             st.session_state["predict_text"] = "This is absolutely wonderful! Best experience I've ever had. Highly recommend to everyone! 🌟"
             st.rerun()
     with ex2:
-        if st.button("😠 Negative example", use_container_width=True, key="ex_neg"):
+        if st.button("Negative example", use_container_width=True, key="ex_neg"):
             st.session_state["predict_text"] = "Terrible customer service, waited 3 hours and nobody helped. Completely disappointed and frustrated."
             st.rerun()
     with ex3:
-        if st.button("😐 Neutral example", use_container_width=True, key="ex_neu"):
+        if st.button("Neutral example", use_container_width=True, key="ex_neu"):
             st.session_state["predict_text"] = "Just read an article about the latest developments in AI technology. Interesting perspective."
             st.rerun()
 
@@ -199,7 +199,7 @@ def render_predict_page():
         user_text = st.session_state.pop("predict_text")
 
     predict_clicked = st.button(
-        "🔮  Analyse Sentiment",
+        " Analyse Sentiment",
         use_container_width=True,
         type="primary",
         disabled=not user_text.strip(),
@@ -305,7 +305,7 @@ def _run_prediction(raw_text: str):
                 "name": "Spark MLlib (LR)",
                 "score": 0.0,
                 "label": "Error",
-                "emoji": "⚠️",
+                "emoji": "",
                 "details": {"error": str(e)},
             })
 
@@ -366,7 +366,7 @@ def _display_prediction_results(results: dict):
             )
 
     # ── Detailed Breakdown ───────────────────────────────────
-    with st.expander("📊 Detailed Engine Output", expanded=False):
+    with st.expander("Detailed Engine Output", expanded=False):
         for eng in engines:
             st.markdown(f"**{eng['name']}**")
             details = eng.get("details", {})

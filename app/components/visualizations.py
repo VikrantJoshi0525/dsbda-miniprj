@@ -385,8 +385,8 @@ def topic_treemap(df: pd.DataFrame, topic_col: str = "topic", label_col: str = "
         color_continuous_scale=[COLORS["negative"], COLORS["neutral"], COLORS["positive"]],
         color_continuous_midpoint=0,
     )
+    fig.update_layout(**_LAYOUT_DEFAULTS)
     fig.update_layout(
-        **_LAYOUT_DEFAULTS,
         title="Topic Distribution (colour = avg sentiment)",
         margin=dict(l=10, r=10, t=50, b=10),
     )
@@ -417,11 +417,131 @@ def hourly_heatmap(df: pd.DataFrame, date_col: str = "timestamp", label_col: str
         ],
         hovertemplate="Day: %{y}<br>Hour: %{x}<br>Posts: %{z}<extra></extra>",
     ))
+    fig.update_layout(**_LAYOUT_DEFAULTS)
     fig.update_layout(
-        **_LAYOUT_DEFAULTS,
         title="Posting Activity Heatmap",
         xaxis_title="Hour of Day",
         yaxis=dict(autorange="reversed"),
         height=350,
     )
+    return fig
+
+
+# ═══════════════════════════════════════════════════════════════
+#  NEW: Semantic Network Graph
+# ═══════════════════════════════════════════════════════════════
+
+def semantic_network_graph(df: pd.DataFrame, text_col: str = "text", top_n: int = 30):
+    """Renders a Plotly Network Graph showing keyword co-occurrence."""
+    try:
+        import networkx as nx
+    except ImportError:
+        fig = go.Figure()
+        fig.update_layout(**_LAYOUT_DEFAULTS, title="NetworkX not installed")
+        return fig
+        
+    from collections import defaultdict
+    import itertools
+    
+    # 1. Extract words per document
+    doc_words = []
+    for text in df[text_col].dropna().astype(str):
+        words = re.findall(r"[a-zA-Z]{3,}", text.lower())
+        filtered = [w for w in set(words) if w not in _STOP_WORDS]
+        if filtered:
+            doc_words.append(filtered)
+            
+    # 2. Count frequencies and co-occurrences
+    word_freq = Counter()
+    co_occur = defaultdict(int)
+    
+    for words in doc_words:
+        for w in words:
+            word_freq[w] += 1
+        for w1, w2 in itertools.combinations(sorted(words), 2):
+            co_occur[(w1, w2)] += 1
+            
+    if not word_freq:
+        fig = go.Figure()
+        fig.update_layout(**_LAYOUT_DEFAULTS, title="Semantic Network Graph")
+        return fig
+        
+    # 3. Get top nodes
+    top_words = [w for w, c in word_freq.most_common(top_n)]
+    
+    # 4. Build graph
+    G = nx.Graph()
+    for w in top_words:
+        G.add_node(w, size=word_freq[w])
+        
+    for (w1, w2), weight in co_occur.items():
+        if w1 in top_words and w2 in top_words and weight > 1:
+            G.add_edge(w1, w2, weight=weight)
+            
+    if G.number_of_nodes() == 0:
+        fig = go.Figure()
+        fig.update_layout(**_LAYOUT_DEFAULTS, title="Semantic Network Graph")
+        return fig
+        
+    # 5. Position nodes using spring layout
+    pos = nx.spring_layout(G, k=0.5, iterations=50, seed=42)
+    
+    # 6. Create Plotly traces
+    edge_x = []
+    edge_y = []
+    for edge in G.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
+        
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=0.5, color="#888"),
+        hoverinfo="none",
+        mode="lines"
+    )
+    
+    node_x = []
+    node_y = []
+    node_text = []
+    node_size = []
+    
+    for node in G.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+        sz = G.nodes[node]['size']
+        node_size.append(min(max(sz * 2, 10), 50))
+        node_text.append(f"{node} ({sz})")
+        
+    node_trace = go.Scatter(
+        x=node_x, y=node_y,
+        mode="markers+text",
+        hoverinfo="text",
+        text=node_text,
+        textposition="bottom center",
+        textfont=dict(color=COLORS["text"], size=10),
+        marker=dict(
+            showscale=False,
+            colorscale="YlGnBu",
+            reversescale=True,
+            color=node_size,
+            size=node_size,
+            line_width=2,
+            line_color=COLORS["background"]
+        )
+    )
+    
+    fig = go.Figure(data=[edge_trace, node_trace])
+    fig.update_layout(**_LAYOUT_DEFAULTS)
+    fig.update_layout(
+        title="Semantic Knowledge Graph (Co-occurrence)",
+        showlegend=False,
+        hovermode="closest",
+        margin=dict(b=20,l=5,r=5,t=40),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
+    )
+    
     return fig

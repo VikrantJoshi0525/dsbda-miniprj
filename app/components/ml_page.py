@@ -17,19 +17,8 @@ from config import COLORS
 def _glass_card(content_html: str, border_color: str = "", extra_style: str = "") -> str:
     """Wrap HTML in a glassmorphism card."""
     bc = border_color or f"{COLORS['primary']}33"
-    return f"""
-    <div style="
-        background: linear-gradient(135deg, rgba(26,26,46,0.7), rgba(22,33,62,0.5));
-        backdrop-filter: blur(16px);
-        border: 1px solid {bc};
-        border-radius: 18px;
-        padding: 1.8rem;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-        {extra_style}
-    ">
-        {content_html}
-    </div>
-    """
+    html = f"""<div style="background: linear-gradient(135deg, rgba(26,26,46,0.7), rgba(22,33,62,0.5)); backdrop-filter: blur(16px); border: 1px solid {bc}; border-radius: 18px; padding: 1.8rem; box-shadow: 0 8px 32px rgba(0,0,0,0.25); {extra_style}">{content_html}</div>"""
+    return html.replace("\n", " ")
 
 
 def _metric_pill(label: str, value: str, color: str) -> str:
@@ -72,7 +61,7 @@ def render_ml_page(df: pd.DataFrame, data_source: str, csv_path: str):
     # ── Hyperparameter Controls ──────────────────────────────
     st.markdown(
         _glass_card(f"""
-            <h3 style="margin:0 0 1rem; color:{COLORS['text']};">🎛️ Model Hyperparameters</h3>
+            <h3 style="margin:0 0 1rem; color:{COLORS['text']};">Model Hyperparameters</h3>
             <p style="color:{COLORS['text']}77; font-size:0.85rem; margin:0 0 0.8rem;">
                 Configure the Logistic Regression pipeline before training
             </p>
@@ -114,7 +103,7 @@ def render_ml_page(df: pd.DataFrame, data_source: str, csv_path: str):
     col_btn, col_info = st.columns([1, 3])
     with col_btn:
         train_clicked = st.button(
-            "🚀  Train Model",
+            " Train Model",
             use_container_width=True,
             type="primary",
         )
@@ -128,7 +117,7 @@ def render_ml_page(df: pd.DataFrame, data_source: str, csv_path: str):
                     padding: 0.7rem 1rem;
                     color: {COLORS['accent']};
                     font-size: 0.85rem;
-                ">⚠️ Demo mode: training on synthetic data. Use Sentiment140 for meaningful results.</div>""",
+                ">Demo mode: training on synthetic data. Use Sentiment140 for meaningful results.</div>""",
                 unsafe_allow_html=True,
             )
         else:
@@ -141,7 +130,7 @@ def render_ml_page(df: pd.DataFrame, data_source: str, csv_path: str):
                     padding: 0.7rem 1rem;
                     color: {COLORS['positive']};
                     font-size: 0.85rem;
-                ">✅ Training on <b>{row_count:,}</b> tweets · {int(test_ratio*100)}% test split
+                ">Training on <b>{row_count:,}</b> tweets · {int(test_ratio*100)}% test split
                 · {num_features:,} features · λ={reg_param}</div>""",
                 unsafe_allow_html=True,
             )
@@ -158,7 +147,7 @@ def render_ml_page(df: pd.DataFrame, data_source: str, csv_path: str):
         st.markdown(
             _glass_card(f"""
                 <div style="text-align:center; padding: 2rem 0;">
-                    <div style="font-size:3rem; margin-bottom:0.5rem;">🤖</div>
+                    <div style="font-size:3rem; margin-bottom:0.5rem;"></div>
                     <h3 style="color:{COLORS['text']}; margin:0 0 0.5rem;">No Model Trained Yet</h3>
                     <p style="color:{COLORS['text']}77; font-size:0.9rem; max-width:400px; margin:0 auto;">
                         Configure hyperparameters above and click <b>Train Model</b>
@@ -172,7 +161,7 @@ def render_ml_page(df: pd.DataFrame, data_source: str, csv_path: str):
 
 def _run_training(df, data_source, csv_path, test_ratio, num_features, reg_param, max_iter):
     """Execute the Spark MLlib training pipeline and display results."""
-    with st.spinner("⚙️ Initialising Spark and building ML pipeline…"):
+    with st.spinner("Initialising Spark and building ML pipeline…"):
         try:
             from spark.session import get_spark
             from spark.ml_pipeline import train_sentiment_model
@@ -206,7 +195,7 @@ def _run_training(df, data_source, csv_path, test_ratio, num_features, reg_param
                 max_iter=max_iter,
             )
 
-            progress.progress(100, text="✅ Training complete!")
+            progress.progress(100, text="Training complete!")
 
             # Store in session
             st.session_state.ml_result = result
@@ -214,7 +203,7 @@ def _run_training(df, data_source, csv_path, test_ratio, num_features, reg_param
             _display_results(result)
 
         except Exception as e:
-            st.error(f"❌ **ML Pipeline failed:** {e}")
+            st.error(f"**ML Pipeline failed:** {e}")
             import traceback
             with st.expander("Stack Trace"):
                 st.code(traceback.format_exc())
@@ -236,7 +225,7 @@ def _display_results(result):
             margin-bottom: 1.5rem;
             display: flex; align-items: center; gap: 0.8rem;
         ">
-            <span style="font-size:1.4rem;">✅</span>
+            <span style="font-size:1.4rem;"></span>
             <div>
                 <span style="font-weight:700; color:{COLORS['positive']};">Model Trained Successfully</span>
                 <span style="color:{COLORS['text']}88; font-size:0.85rem; margin-left:0.6rem;">
@@ -264,10 +253,10 @@ def _display_results(result):
 
     # ── Tabs ─────────────────────────────────────────────────
     tab_cm, tab_class, tab_feat, tab_config = st.tabs([
-        "📊 Confusion Matrix",
-        "📈 Per-Class Metrics",
-        "🔬 Feature Importance",
-        "⚙️ Configuration",
+        "Confusion Matrix",
+        "Per-Class Metrics",
+        "Feature Importance",
+        "Configuration",
     ])
 
     # ── Confusion Matrix Tab ─────────────────────────────────
@@ -344,7 +333,7 @@ def _render_confusion_matrix(result):
     st.plotly_chart(fig, use_container_width=True)
 
     # Also show raw table
-    with st.expander("📋 Raw Confusion Matrix Table"):
+    with st.expander("Raw Confusion Matrix Table"):
         cm_df = pd.DataFrame(result.confusion_matrix)
         st.dataframe(cm_df, use_container_width=True)
 
@@ -409,7 +398,7 @@ def _render_class_metrics(result):
     st.plotly_chart(fig, use_container_width=True)
 
     # Table
-    st.markdown("#### 📋 Detailed Metrics")
+    st.markdown("#### Detailed Metrics")
     display_df = class_df.copy()
     display_df["Precision"] = display_df["Precision"].apply(lambda x: f"{x:.4f}")
     display_df["Recall"] = display_df["Recall"].apply(lambda x: f"{x:.4f}")
@@ -464,7 +453,7 @@ def _render_feature_importance(result):
             color: {COLORS['text']}aa;
             font-size: 0.82rem;
         ">
-            💡 Feature indices correspond to <b>HashingTF</b> bucket positions.
+            Feature indices correspond to <b>HashingTF</b> bucket positions.
             Higher coefficient sums indicate features (word hashes) that the model
             relies on most heavily for classification. The mapping is hashed, so
             indices don't directly correspond to specific words.
@@ -526,7 +515,7 @@ def _render_config(result):
     # Pipeline diagram
     st.markdown(
         _glass_card(f"""
-            <h3 style="margin:0 0 1rem; color:{COLORS['text']};">🔄 Pipeline Stages</h3>
+            <h3 style="margin:0 0 1rem; color:{COLORS['text']};">Pipeline Stages</h3>
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
                 {"".join([
                     f'''<div style="
@@ -540,12 +529,12 @@ def _render_config(result):
                     ">{stage}</div>
                     <span style="color:{COLORS['text']}44; font-size:1.2rem;">→</span>'''
                     for stage in [
-                        "📝 Tokenizer",
-                        "🚫 StopWords",
-                        "📊 HashingTF",
-                        "📐 IDF",
-                        "🏷️ StringIndexer",
-                        "🤖 LogisticRegression",
+                        "Tokenizer",
+                        "StopWords",
+                        "HashingTF",
+                        "IDF",
+                        "StringIndexer",
+                        "LogisticRegression",
                     ]
                 ])}
             </div>

@@ -1,5 +1,5 @@
 """
-🚀 Social Media Sentiment Analyzer — Main Entry Point
+Social Media Sentiment Analyzer — Main Entry Point
 Run:  streamlit run app/main.py
 """
 
@@ -19,6 +19,7 @@ from components.dashboard import render_dashboard
 from components.analysis import render_analysis
 from components.ml_page import render_ml_page
 from components.predict_page import render_predict_page
+from components.live_stream import render_live_stream
 from utils.helpers import generate_sample_data
 
 
@@ -75,16 +76,16 @@ def _load_sentiment140(csv_path: str, limit: int, method: str, _version: int = 0
 
 
 # ── Choose data source ──────────────────────────────────────────
-if filters["data_source"] == "sentiment140":
+if filters["data_source"] == "sentiment140" and not filters["page"].startswith("Live"):
     csv_path = filters["csv_path"]
     if not csv_path or not Path(csv_path).exists():
         st.error(
-            f"❌ **CSV not found:** `{csv_path}`\n\n"
+            f"**CSV not found:** `{csv_path}`\n\n"
             "Please download the Sentiment140 dataset and place the CSV in `data/sample/`.\n\n"
             "**Download:** [Sentiment140 on Kaggle](https://www.kaggle.com/datasets/kazanova/sentiment140)"
         )
         st.info(
-            "💡 **Quick fix:** Switch to **🎲 Demo Data** in the sidebar to explore the app with synthetic data."
+            "**Quick fix:** Switch to **🎲 Demo Data** in the sidebar to explore the app with synthetic data."
         )
         st.stop()
 
@@ -124,7 +125,7 @@ if filters["data_source"] == "sentiment140":
         )
 
     except Exception as e:
-        st.error(f"❌ **PySpark pipeline failed:** {e}")
+        st.error(f"**PySpark pipeline failed:** {e}")
         st.markdown(
             f"""
             <div style="
@@ -169,23 +170,30 @@ df_filtered = df[mask].copy()
 # ══════════════════════════════════════════════════════════════════
 page = filters["page"]
 
-if page.startswith("🏠"):
+if page.startswith("Dashboard"):
     render_dashboard(df_filtered)
 
-elif page.startswith("🔍"):
+elif page.startswith("Live"):
+    render_live_stream(filters)
+
+elif page.startswith("Battle"):
+    from components.battle_mode import render_battle_mode
+    render_battle_mode(filters)
+
+elif page.startswith("Analysis"):
     render_analysis(df_filtered)
 
-elif page.startswith("🤖"):
+elif page.startswith("ML"):
     render_ml_page(
         df=df_filtered,
         data_source=filters["data_source"],
         csv_path=filters.get("csv_path", ""),
     )
 
-elif page.startswith("🔮"):
+elif page.startswith("Predict"):
     render_predict_page()
 
-elif page.startswith("⚙️"):
+elif page.startswith("Settings"):
     # ── Settings page ────────────────────────────────────────
     st.markdown(
         f"""
@@ -268,10 +276,10 @@ elif page.startswith("⚙️"):
                 from spark.session import get_spark
                 spark = get_spark()
                 sdf = spark.createDataFrame(df_filtered.head(10))
-                st.success(f"✅ Spark is running! Created DataFrame with {sdf.count()} rows.")
+                st.success(f"Spark is running! Created DataFrame with {sdf.count()} rows.")
                 st.code(f"Spark Version: {spark.version}\nMaster: {spark.sparkContext.master}")
             except Exception as e:
-                st.error(f"❌ Spark connection failed: {e}")
+                st.error(f"Spark connection failed: {e}")
                 st.info("Make sure Java 8/11/17 is installed and JAVA_HOME is set.")
 
     # ── Dataset Info (when Sentiment140 is loaded) ───────────
@@ -287,7 +295,7 @@ elif page.startswith("⚙️"):
         with info_cols[2]:
             st.metric("Date Range", f"{df['timestamp'].min():%Y-%m-%d} → {df['timestamp'].max():%Y-%m-%d}" if pd.notna(df['timestamp'].min()) else "N/A")
 
-        with st.expander("🔎 Column Schema", expanded=False):
+        with st.expander("Column Schema", expanded=False):
             schema_df = pd.DataFrame({
                 "Column": df.columns,
                 "Type": [str(df[c].dtype) for c in df.columns],

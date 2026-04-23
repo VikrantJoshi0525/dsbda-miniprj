@@ -20,3 +20,4 @@ numpy>=1.26.0
 # ── Utilities ────────────────────────────────
 python-dotenv>=1.0.1
 Pillow>=10.3.0
+networkx==3.2.1
